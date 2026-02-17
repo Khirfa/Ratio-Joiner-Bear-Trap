@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kalkulator Rasio Bear Trap</title>
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #1e1e2f;
+            color: white;
+            padding: 20px;
+        }
+        input {
+            padding: 5px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+        }
+        .box {
+            background: #2b2b40;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .result {
+            background: #111;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .note {
+            margin-top: 15px;
+            padding: 10px;
+            background: #2e2e2e;
+            border-left: 4px solid #4CAF50;
+            font-size: 14px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #444;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Kalkulator Rasio Bear Trap</h1>
+
+<div class="box">
+    <h2>Data Pasukan</h2>
+    <label>Total Infantry</label>
+    <input type="number" id="infantry">
+
+    <label>Total Lancer</label>
+    <input type="number" id="lancer">
+
+    <label>Total Marksman</label>
+    <input type="number" id="marksman">
+
+    <label>Kapasitas Penyebaran Hero</label>
+    <input type="number" id="kapasitasHero">
+
+    <label>Kapasitas Penyebaran No Hero</label>
+    <input type="number" id="kapasitasNoHero">
+
+    <label>Total Barisan</label>
+    <input type="number" id="barisan">
+</div>
+
+<div class="box">
+    <h2>Level Skill</h2>
+    <label>Level Kera Salju (1-10)</label>
+    <input type="number" id="kera" min="1" max="10">
+
+    <label>Level Cyrille (1-10)</label>
+    <input type="number" id="cyrille" min="1" max="10">
+</div>
+
+<div class="box">
+    <h2>Rasio Open Rally (%)</h2>
+    <label>Infantry</label>
+    <input type="number" id="rInf">
+
+    <label>Lancer</label>
+    <input type="number" id="rLan">
+
+    <label>Marksman</label>
+    <input type="number" id="rMar">
+</div>
+
+<button onclick="hitung()">Hitung Rasio Joiner</button>
+
+<div class="result" id="hasil"></div>
+
+<script>
+function hitung() {
+    const skillKera = {1:1500,2:3000,3:4500,4:6000,5:7500,6:9000,7:10500,8:12000,9:13500,10:15000};
+    const skillCyrille = {1:3000,2:6000,3:9000,4:12000,5:15000,6:18000,7:21000,8:24000,9:27000,10:30000};
+
+    let infantry = parseFloat(document.getElementById("infantry").value);
+    let lancer = parseFloat(document.getElementById("lancer").value);
+    let marksman = parseFloat(document.getElementById("marksman").value);
+    let kapasitasHero = parseFloat(document.getElementById("kapasitasHero").value);
+    let kapasitasNoHero = parseFloat(document.getElementById("kapasitasNoHero").value);
+    let barisan = parseFloat(document.getElementById("barisan").value);
+
+    let levelKera = parseInt(document.getElementById("kera").value);
+    let levelCyrille = parseInt(document.getElementById("cyrille").value);
+
+    let rInf = parseFloat(document.getElementById("rInf").value) / 100;
+    let rLan = parseFloat(document.getElementById("rLan").value) / 100;
+    let rMar = parseFloat(document.getElementById("rMar").value) / 100;
+
+    let bonusKera = skillKera[levelKera] || 0;
+    let bonusCyrille = skillCyrille[levelCyrille] || 0;
+
+    // Total kapasitas hero untuk acuan open rally
+    let totalHero = kapasitasHero + bonusKera + bonusCyrille;
+
+    // Hitung unit open rally awal berdasarkan totalHero
+    let openInf = totalHero * rInf;
+    let openLan = totalHero * rLan;
+    let openMar = totalHero * rMar;
+
+    // Fungsi perhitungan rasio joiner biasa
+    function hitungRasio(kapasitasDasar) {
+        let totalKapasitas = kapasitasDasar + bonusKera + bonusCyrille;
+
+        // Sisa pasukan setelah open rally (menggunakan open rally dari totalHero)
+        let sInf = infantry - openInf;
+        let sLan = lancer - openLan;
+        let sMar = marksman - openMar;
+
+        let Binf = sInf / barisan;
+        let Blan = sLan / barisan;
+        let Bmar = sMar / barisan;
+
+        return {
+            total: totalKapasitas,
+            infantry: Math.floor((Binf / totalKapasitas) * 100),
+            lancer: Math.floor((Blan / totalKapasitas) * 100),
+            marksman: Math.floor((Bmar / totalKapasitas) * 100)
+        };
+    }
+
+    let hasilHero = hitungRasio(kapasitasHero);
+    let hasilNoHero = hitungRasio(kapasitasNoHero);
+
+    document.getElementById("hasil").innerHTML = `
+        <h2>Hasil Rasio Joiner</h2>
+        <table>
+            <tr>
+                <th></th>
+                <th>Total Kapasitas</th>
+                <th>Infantry</th>
+                <th>Lancer</th>
+                <th>Marksman</th>
+            </tr>
+            <tr>
+                <td>Dengan Hero</td>
+                <td>${hasilHero.total.toLocaleString()}</td>
+                <td>${hasilHero.infantry}%</td>
+                <td>${hasilHero.lancer}%</td>
+                <td>${hasilHero.marksman}%</td>
+            </tr>
+            <tr>
+                <td>Tanpa Hero</td>
+                <td>${hasilNoHero.total.toLocaleString()}</td>
+                <td>${hasilNoHero.infantry}%</td>
+                <td>${hasilNoHero.lancer}%</td>
+                <td>${hasilNoHero.marksman}%</td>
+            </tr>
+        </table>
+
+        <div class="note">
+        <b>Note:</b><br>
+        Open rally dihitung hanya dari total kapasitas hero.<br>
+        Lancer bisa disesuaikan, yang penting marksman sesuai hasilnya.<br>
+        Infantry lebih baik isi sekitar <b>1-5%</b> dan lancer <b>5-20%</b>.
+        </div>
+    `;
+}
+</script>
+
+</body>
+</html>
